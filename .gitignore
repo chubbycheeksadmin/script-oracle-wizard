@@ -43,3 +43,4 @@ coverage
 
 # Local data
 training-data/*.json
+.netlify
