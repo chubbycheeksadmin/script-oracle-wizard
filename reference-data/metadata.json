@@ -1,0 +1,14 @@
+[
+  {
+    "project": "Example - Gousto The Heist",
+    "budget": 474928,
+    "currency": "GBP",
+    "shootDays": 2,
+    "type": "studio+location",
+    "country": "UK",
+    "year": 2025,
+    "talent": "featured cast, extras",
+    "notes": "2nd unit, swing crews, £237k/day. Currently the ONLY calibration data in the platform.",
+    "files": {}
+  }
+]
