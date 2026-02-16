@@ -211,7 +211,7 @@ export default function TypeformWizard() {
               setInput(prev => ({
                 ...prev,
                 proposedShootDays: rollup.estimatedShootDays,
-                companyMovesPerDay: Math.ceil(breakdownResult.breakdown!.companyMoves / Math.max(1, rollup.estimatedShootDays)),
+                companyMovesPerDay: Math.ceil((breakdownResult.breakdown!.companyMoves || rollup.locationMoves || 0) / Math.max(1, rollup.estimatedShootDays)),
                 complexity: {
                   ...prev.complexity,
                   technical: rollup.hasTechnicalShots,

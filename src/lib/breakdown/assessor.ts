@@ -280,9 +280,9 @@ function generateProducerSummary(
 
   const rollup = input.aiBreakdown?.rollup;
   const totalScenes = input.aiBreakdown?.scenes?.length || input.scriptBreakdown?.totalScenes || 0;
-  const companyMoves = rollup?.locationMoves || Math.round(schedule.avgCompanyMovesPerDay * schedule.totalDaysRequired);
-  const uniqueLocs = input.aiBreakdown?.uniqueLocations || rollup?.actualLocations || companyMoves + 1 || 0;
-  const totalSetups = rollup?.totalEstimatedShots || 0;
+  const companyMoves = rollup?.locationMoves ?? (isNaN(schedule.avgCompanyMovesPerDay) ? 0 : Math.round(schedule.avgCompanyMovesPerDay * schedule.totalDaysRequired));
+  const uniqueLocs = input.aiBreakdown?.uniqueLocations || rollup?.actualLocations || (companyMoves ? companyMoves + 1 : 1);
+  const totalSetups = rollup?.totalEstimatedShots || rollup?.mainUnitSetups || 0;
   const isStudio = rollup?.studioShoot || false;
 
   // TECHNICAL BREAKDOWN
