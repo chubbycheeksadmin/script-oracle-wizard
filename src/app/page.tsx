@@ -124,7 +124,7 @@ export default function TypeformWizard() {
     }, 2000);
   };
   
-  // PDF upload handler - Server-side parsing
+  // PDF upload handler - Client-side parsing (avoids Vercel 4.5MB body limit)
   const handlePDFUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -145,34 +145,30 @@ export default function TypeformWizard() {
 
     try {
       setAnalysisLogs(prev => [...prev, `Extracting text from ${file.name}...`]);
-      
-      // Send PDF to server-side API for parsing
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      console.log('[PDF Upload] Sending file to API:', file.name, file.size);
-      
-      const parseResponse = await fetch('/api/parse-pdf', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      console.log('[PDF Upload] Response status:', parseResponse.status);
-      
-      if (!parseResponse.ok) {
-        const errorText = await parseResponse.text();
-        console.error('[PDF Upload] Error response:', errorText);
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: errorText };
-        }
-        throw new Error(errorData.error || `Server error: ${parseResponse.status}`);
+
+      // Parse PDF client-side using pdfjs-dist
+      console.log('[PDF Upload] Parsing client-side:', file.name, file.size);
+
+      const pdfjsLib = await import('pdfjs-dist');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+      let rawText = '';
+      const pageCount = pdf.numPages;
+
+      for (let i = 1; i <= pageCount; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items
+          .map((item: any) => item.str)
+          .join(' ');
+        rawText += `\n=== PAGE ${i} ===\n${pageText}\n`;
       }
-      
-      const parseResult = await parseResponse.json();
-      const rawText = parseResult.text;
+
+      rawText = rawText.trim();
+      console.log('[PDF Upload] Parsed:', pageCount, 'pages,', rawText.length, 'chars');
       
       if (!rawText || rawText.length < 50) {
         setPdfStatus('error');
@@ -181,7 +177,7 @@ export default function TypeformWizard() {
         return;
       }
 
-      setAnalysisLogs(prev => [...prev, `Extracted ${rawText.length.toLocaleString()} characters from ${parseResult.pageCount} pages`, 'Initializing AI analysis...']);
+      setAnalysisLogs(prev => [...prev, `Extracted ${rawText.length.toLocaleString()} characters from ${pageCount} pages`, 'Initializing AI analysis...']);
       setPdfStatus('analyzing');
       
       // Import AI breakdown function
