@@ -242,8 +242,9 @@ export default function TypeformWizard() {
         }
       );
     } catch (error) {
+      console.error('[PDF Upload] Caught error:', error);
       setPdfStatus('error');
-      setExtractionError('Error reading PDF');
+      setExtractionError(error instanceof Error ? error.message : 'Error reading PDF');
       setPdfLoading(false);
     }
   };
